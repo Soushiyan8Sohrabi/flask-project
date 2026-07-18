@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}
+My Subjects
+{% endblock %}
+
+{% block content %}
+<ul>
+    {% for topic in topics%}
+        <li>{{topic}}</li>
+    {% endfor %}
+
+    {% if topics|length > 3 %}
+        <p>You have lots of subjects!</p>
+    {% else %}
+        <p>You have a few subjects!</p>
+    {% endif %}
+</ul>
+{% endblock %}
