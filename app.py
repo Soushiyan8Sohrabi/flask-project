@@ -1,11 +1,69 @@
-from flask import Flask, render_template, request, flash, redirect, url_for 
+from flask import Flask, render_template, request, flash, redirect, url_for, session, make_response 
   
 app = Flask(__name__) 
 app.secret_key = "my_secret_key"
 
 @app.route('/') 
 def home(): 
-    return render_template('index.html')
+    session['visits'] = session.get('visits', 0) + 1
+    return f'You have visited this page {session["visits"]} times.'
+
+@app.route('/add/<item>')
+def add_to_cart(item):
+    cart = session.get('cart', [])
+    cart.append(item)
+    session['cart'] = cart
+
+    return f"{item} was added to the cart. Current cart: {cart}"
+
+@app.route("/remove/<item>")
+def remove_from_cart(item):
+    cart = session.get('cart', [])
+
+    if item in cart:
+        cart.remove(item)
+        session['cart'] = cart
+        return f"{item} was removed from the cart."
+
+    return f"{item} is not in the cart."
+    
+
+@app.route('/cart')
+def view_cart():
+    cart = session.get('cart', [])
+    return render_template('cart.html', items=cart)
+
+
+@app.route('/clear-cart')
+def clear_cart():
+    session.pop('cart', None)
+    return "Cart has been cleared."
+
+@app.route('/set-theme/<theme>')
+def set_theme(theme):
+    response = make_response(f"Theme changed to {theme}.")
+    response.set_cookie('theme', theme, max_age=60 * 60 * 24 * 30)
+    return response
+
+@app.route('/show-theme')
+def show_theme():
+    theme = request.cookies.get('theme', 'light')
+    return f"Your current theme is: {theme}"
+
+@app.route("/add-score")
+def add_score():
+    score = session.get('score', 0)
+    score += 10
+    session['score'] = score
+
+    return "Score increased"
+
+
+@app.route("/score")
+def score():
+    score = session.get('score', 0)
+    
+    return f"Score is {score}"
 
 @app.route('/about') 
 def about(): 
