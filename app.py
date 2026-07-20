@@ -1,7 +1,51 @@
-from flask import Flask, render_template, request, flash, redirect, url_for, session, make_response 
+from flask import Flask, render_template, request, flash, redirect, url_for, session, make_response
+from flask_sqlalchemy import SQLAlchemy 
   
 app = Flask(__name__) 
 app.secret_key = "my_secret_key"
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db' 
+db = SQLAlchemy(app) 
+
+class Task(db.Model): 
+    id = db.Column(db.Integer, primary_key=True) 
+    title = db.Column(db.String(100), nullable=False) 
+    done = db.Column(db.Boolean, default=False) 
+    priority = db.Column(db.String(20), nullable=False, default="Important")
+  
+    def __repr__(self): 
+        return f'<Task {self.title}>'
+    
+@app.route('/add-task', methods=['POST']) 
+def add_task(): 
+    title = request.form.get('title') 
+    new_task = Task(title=title) 
+    db.session.add(new_task) 
+    db.session.commit() 
+    return redirect(url_for('tasks')) 
+
+@app.route('/tasks') 
+def tasks(): 
+    all_tasks = Task.query.all() 
+    return render_template('tasks.html', tasks=all_tasks) 
+
+@app.route('/complete/<int:task_id>') 
+def complete_task(task_id): 
+    task = Task.query.get(task_id) 
+    task.done = True 
+    db.session.commit() 
+    return redirect(url_for('tasks')) 
+
+@app.route('/delete/<int:task_id>') 
+def delete_task(task_id): 
+    task = Task.query.get(task_id) 
+    db.session.delete(task) 
+    db.session.commit() 
+    return redirect(url_for('tasks')) 
+
+@app.route('/tasks/done')
+def done_tasks():
+    completed_tasks = Task.query.filter_by(done=True).all()
+    return render_template('tasks.html', tasks=completed_tasks)
 
 @app.route('/') 
 def home(): 
