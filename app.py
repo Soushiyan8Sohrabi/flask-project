@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from product import Product
 from cart import Cart
 from order import Order
@@ -14,6 +14,10 @@ products = [
     Product("keyboard", 2000, 10),
     Product("mouse", 1000, 5),
 ]
+
+@app.route("/")
+def home():
+    return render_template("index.html")
 
 @app.route("/products")
 def get_products():

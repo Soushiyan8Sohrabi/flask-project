@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Shop</title>
+</head>
+<body>
+    <h1>Shop Products</h1>  
+    <div id="products"></div>
+    <script>
+        fetch("http://127.0.0.1:5000/products")
+        .then(response => response.json())
+        .then(data => {
+            const pDiv = document.getElementById("products");
+            const productList = data.products;
+
+        for(let i = 0; i < productList.length; i++){
+            pDiv.innerHTML += 
+            `<p>
+                ${productList[i].name} 
+                <button onclick="addToCart('${productList[i].name}')">Add to Cart</button>
+            </p>`;
+        }
+
+        });
+
+        function addToCart(productName) {
+            fetch("/cart/add", { 
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: productName,
+                    quantity: 1
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log(result);
+                if(result.message) alert(result.message);
+                if(result.error) alert("error: " + result.error);
+            })
+            .catch(err => console.error("Please check your connection or server status.", err));
+        }
+
+            
+    </script>
+</body>
+</html>
