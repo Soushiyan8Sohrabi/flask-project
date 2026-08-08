@@ -1,6 +1,6 @@
-from product import Product
-from cart import Cart
-from order import Order, save_order_to_json
+from past_frontend.product import Product
+from past_frontend.cart import Cart
+from past_frontend.order import Order, save_order_to_json
 
 p1 = Product("Iphone 16", 1000, 0)
 p2 = Product("S24 FE", 500, 5)

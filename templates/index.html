@@ -6,46 +6,99 @@
     <title>My Shop</title>
 </head>
 <body>
-    <h1>Shop Products</h1>  
+
+    <h1>Shop Products</h1>
     <div id="products"></div>
+
+    <h1>Cart Items</h1>
+    <div id="cart"></div>
+    
+    <button onclick="CreateOrder()">Create Order</button>
+
     <script>
-        fetch("http://127.0.0.1:5000/products")
-        .then(response => response.json())
-        .then(data => {
-            const pDiv = document.getElementById("products");
-            const productList = data.products;
+        fetch("/products")
+            .then(response => {
+                if (!response.ok) throw new Error("Failed to fetch products");
+                return response.json();
+            })
+            .then(data => {
+                const pDiv = document.getElementById("products");
+                const productList = data.products;
 
-        for(let i = 0; i < productList.length; i++){
-            pDiv.innerHTML += 
-            `<p>
-                ${productList[i].name} 
-                <button onclick="addToCart('${productList[i].name}')">Add to Cart</button>
-            </p>`;
-        }
-
-        });
+                pDiv.innerHTML = ""; 
+                productList.forEach(product => {
+                    pDiv.innerHTML += `
+                        <p>
+                            ${product.name} 
+                            <button onclick="addToCart('${product.name}')">Add to Cart</button>
+                        </p>`;
+                });
+            })
+            .catch(err => console.error("Error loading products:", err));
 
         function addToCart(productName) {
             fetch("/cart/add", { 
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    name: productName,
-                    quantity: 1
-                })
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: productName, quantity: 1 })
             })
             .then(response => response.json())
             .then(result => {
-                console.log(result);
-                if(result.message) alert(result.message);
-                if(result.error) alert("error: " + result.error);
+                if (result.error) {
+                    alert("Error: " + result.error);
+                } else if (result.message) {
+                    alert(result.message);
+                }
+                loadCart(); 
             })
-            .catch(err => console.error("Please check your connection or server status.", err));
+            .catch(err => console.error("Error adding to cart:", err));
+        }
+        function loadCart() {
+            fetch("/cart")
+                .then(response => {
+                    if (!response.ok) throw new Error("Failed to fetch cart");
+                    return response.json();
+                })
+                .then(data => {
+                    const cDiv = document.getElementById("cart");
+                    cDiv.innerHTML = ""; 
+                    
+                    if (data.cart && data.cart.length > 0) {
+                        let html = "<ul>";
+                        data.cart.forEach(item => {
+                            html += `<li>${item.name} - Price: ${item.price} - Quantity: ${item.quantity}</li>`;
+                        });
+                        html += "</ul>";
+                        cDiv.innerHTML = html;
+                    } else {
+                        cDiv.innerHTML = "<p>Shopping Cart is empty</p>";
+                    }
+                })
+                .catch(err => console.error("Error loading cart:", err));
+        }
+        function CreateOrder() {
+            const customerName = prompt("Please enter your name:");
+            
+            if (!customerName) {
+                alert("Name cannot be empty!");
+                return;
+            }
+
+            fetch("/order/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ customer_name: customerName }) 
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message || (data.error ? "Error: " + data.error : "Order processed"));
+            })
+            .catch(err => {
+                console.error("Error creating order:", err);
+            })
         }
 
-            
+        loadCart();
     </script>
 </body>
 </html>

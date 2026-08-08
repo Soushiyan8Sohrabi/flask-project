@@ -2,10 +2,12 @@ from flask import Flask, jsonify, request, render_template
 from product import Product
 from cart import Cart
 from order import Order
+from flask_cors import CORS
 
 
 
 app = Flask(__name__)
+CORS(app)
 my_cart = Cart()
 
 order_history = []
@@ -140,7 +142,6 @@ def get_orders():
         "orders": result
     })
 
-    
 
 if __name__ == "__main__":
     app.run(debug=True)
